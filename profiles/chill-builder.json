@@ -22,6 +22,10 @@
   "filesystem": {
     "allow": [
       "$HOME/go"
+    ],
+    "read": [
+      "$HOME/.local/bin",
+      "$HOME/.local/share/claude"
     ]
   },
   "network": {
