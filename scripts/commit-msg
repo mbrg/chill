@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Commit-msg hook: reject commit messages containing the Co-Authored-By trailer
+set -euo pipefail
+
+if grep -qiF "co-authored-by" "$1"; then
+    echo "ERROR: Commit message contains Co-Authored-By. Remove it and try again."
+    exit 1
+fi
+
+exit 0
