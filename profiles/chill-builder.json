@@ -30,13 +30,15 @@
       "proxy.golang.org",
       "sum.golang.org",
       "www.oref.org.il",
-      "alerts-history.oref.org.il"
+      "alerts-history.oref.org.il",
+      "api.telegram.org"
     ],
     "credentials": ["telegram"],
     "custom_credentials": {
       "telegram": {
         "upstream": "https://api.telegram.org",
-        "credential_key": "telegram_bot_token",
+        "credential_key": "op://Private/Chill Telegram Bot/credential",
+        "env_var": "TELEGRAM_BOT_TOKEN",
         "inject_mode": "url_path",
         "path_pattern": "/bot{}/",
         "path_replacement": "/bot{}/"
