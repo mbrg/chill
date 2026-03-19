@@ -1,0 +1,49 @@
+{
+  "extends": "claude-code",
+  "meta": {
+    "name": "chill-builder",
+    "version": "1.0.0",
+    "description": "Least-privilege sandbox for building the Chill Oref alert notifier"
+  },
+  "policy": {
+    "exclude_groups": [
+      "node_runtime",
+      "rust_runtime",
+      "python_runtime",
+      "nix_runtime",
+      "vscode_macos",
+      "vscode_linux",
+      "user_tools"
+    ]
+  },
+  "workdir": {
+    "access": "readwrite"
+  },
+  "filesystem": {
+    "allow": [
+      "$HOME/go"
+    ]
+  },
+  "network": {
+    "allow_domain": [
+      "api.anthropic.com",
+      "proxy.golang.org",
+      "sum.golang.org",
+      "www.oref.org.il",
+      "alerts-history.oref.org.il"
+    ],
+    "credentials": ["telegram"],
+    "custom_credentials": {
+      "telegram": {
+        "upstream": "https://api.telegram.org",
+        "credential_key": "telegram_bot_token",
+        "inject_mode": "url_path",
+        "path_pattern": "/bot{}/",
+        "path_replacement": "/bot{}/"
+      }
+    }
+  },
+  "rollback": {
+    "exclude_patterns": ["testdata"]
+  }
+}
