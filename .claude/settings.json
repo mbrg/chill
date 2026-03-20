@@ -1,4 +1,20 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(nono policy:*)",
+      "Bash(nono --help)",
+      "Bash(nono why:*)",
+      "Bash(curl -sL https://nono.sh/docs)",
+      "Bash(curl -sL https://nono.sh/docs/network)",
+      "Bash(curl -sL https://nono.sh/docs/profiles)",
+      "Bash(curl -sL https://nono.sh/docs/reference)",
+      "Bash(curl -sL https://nono.sh)",
+      "WebFetch(domain:nono.sh)",
+      "WebFetch(domain:docs.nono.sh)",
+      "Bash(nono help:*)",
+      "Bash(nono profile:*)"
+    ]
+  },
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
