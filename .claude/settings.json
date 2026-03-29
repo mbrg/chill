@@ -15,6 +15,11 @@
       "Bash(nono profile:*)"
     ]
   },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "autoMemoryEnabled": false,
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
