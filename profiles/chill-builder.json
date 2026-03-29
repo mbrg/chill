@@ -29,7 +29,7 @@
     ]
   },
   "network": {
-    "open_port": [1],
+    "open_port": [18080],
     "allow_domain": [
       "api.anthropic.com",
       "proxy.golang.org",
