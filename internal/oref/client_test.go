@@ -140,3 +140,139 @@ func TestFetchAlerts_ChecksHeaders(t *testing.T) {
 		t.Errorf("Accept = %q, want %q", gotAccept, "application/json")
 	}
 }
+
+func TestClassifyCategory(t *testing.T) {
+	tests := []struct {
+		cat  int
+		want oref.EventType
+	}{
+		{1, oref.EventAlert},       // missilealert
+		{2, oref.EventAlert},       // uav
+		{3, oref.EventAlert},       // nonconventional
+		{4, oref.EventAlert},       // warning
+		{7, oref.EventAlert},       // earthquakealert1
+		{9, oref.EventAlert},       // cbrne
+		{10, oref.EventAlert},      // terrorattack
+		{11, oref.EventAlert},      // tsunami
+		{12, oref.EventAlert},      // hazmat
+		{13, oref.EventEndOfEvent}, // update
+		{14, oref.EventPreAlert},   // flash
+		{15, oref.EventDrill},      // missilealertdrill
+		{20, oref.EventDrill},      // mid-range drill
+		{28, oref.EventDrill},      // flashdrill
+		{0, oref.EventUnknown},     // out of range
+		{29, oref.EventUnknown},    // out of range
+		{-1, oref.EventUnknown},    // negative
+		{100, oref.EventUnknown},   // way out of range
+	}
+	for _, tt := range tests {
+		got := oref.ClassifyCategory(tt.cat)
+		if got != tt.want {
+			t.Errorf("ClassifyCategory(%d) = %v, want %v", tt.cat, got, tt.want)
+		}
+	}
+}
+
+func TestAlertResponse_ToEvent(t *testing.T) {
+	resp := &oref.AlertResponse{
+		ID:    "133456789012345678",
+		Cat:   "1",
+		Title: "ירי רקטות וטילים",
+		Data:  []string{"נתיבות", "תקומה"},
+		Desc:  "היכנסו למרחב המוגן ושהו בו 10 דקות",
+	}
+	ev := resp.ToEvent()
+	if ev.ID != resp.ID {
+		t.Errorf("ID = %q, want %q", ev.ID, resp.ID)
+	}
+	if ev.Category != 1 {
+		t.Errorf("Category = %d, want 1", ev.Category)
+	}
+	if ev.EventType != oref.EventAlert {
+		t.Errorf("EventType = %v, want Alert", ev.EventType)
+	}
+	if len(ev.Areas) != 2 {
+		t.Fatalf("Areas len = %d, want 2", len(ev.Areas))
+	}
+	if ev.Areas[0] != "נתיבות" {
+		t.Errorf("Areas[0] = %q, want %q", ev.Areas[0], "נתיבות")
+	}
+
+	// End-of-event
+	endResp := &oref.AlertResponse{ID: "1", Cat: "13", Title: "האירוע הסתיים", Data: []string{"נתיבות"}}
+	endEv := endResp.ToEvent()
+	if endEv.EventType != oref.EventEndOfEvent {
+		t.Errorf("EventType = %v, want EndOfEvent", endEv.EventType)
+	}
+
+	// Drill
+	drillResp := &oref.AlertResponse{ID: "1", Cat: "15", Title: "תרגיל"}
+	drillEv := drillResp.ToEvent()
+	if drillEv.EventType != oref.EventDrill {
+		t.Errorf("EventType = %v, want Drill", drillEv.EventType)
+	}
+
+	// Invalid cat string
+	badResp := &oref.AlertResponse{ID: "1", Cat: "abc"}
+	badEv := badResp.ToEvent()
+	if badEv.Category != 0 {
+		t.Errorf("Category = %d, want 0 for unparseable cat", badEv.Category)
+	}
+	if badEv.EventType != oref.EventUnknown {
+		t.Errorf("EventType = %v, want Unknown", badEv.EventType)
+	}
+}
+
+func TestFetchDistricts(t *testing.T) {
+	srv := serveFixture(t, "../../testdata/districts.json")
+	defer srv.Close()
+
+	c := oref.NewClient(oref.WithBaseURL(srv.URL))
+	districts, err := c.FetchDistricts(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(districts) < 1000 {
+		t.Fatalf("districts len = %d, want > 1000", len(districts))
+	}
+	// Spot-check first entry
+	d := districts[0]
+	if d.Label == "" {
+		t.Error("first district label is empty")
+	}
+	if d.AreaName == "" {
+		t.Error("first district areaname is empty")
+	}
+	if d.MigunTime <= 0 {
+		t.Errorf("first district migun_time = %d, want > 0", d.MigunTime)
+	}
+}
+
+func TestFetchCategories(t *testing.T) {
+	srv := serveFixture(t, "../../testdata/categories.json")
+	defer srv.Close()
+
+	c := oref.NewClient(oref.WithBaseURL(srv.URL))
+	categories, err := c.FetchCategories(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(categories) == 0 {
+		t.Fatal("expected categories, got empty")
+	}
+
+	// Check cat 13 = "update", cat 14 = "flash"
+	catMap := make(map[int]string)
+	for _, c := range categories {
+		catMap[c.ID] = c.Category
+	}
+	if catMap[13] != "update" {
+		t.Errorf("cat 13 = %q, want %q", catMap[13], "update")
+	}
+	if catMap[14] != "flash" {
+		t.Errorf("cat 14 = %q, want %q", catMap[14], "flash")
+	}
+	if catMap[1] != "missilealert" {
+		t.Errorf("cat 1 = %q, want %q", catMap[1], "missilealert")
+	}
+}
